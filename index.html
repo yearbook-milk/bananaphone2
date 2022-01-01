@@ -1,68 +1,128 @@
-import asyncio
-import websockets
-import ssl, pathlib # wss secure dependencies
+<div id='error'></div>
 
-connections = []
-channels = {}
+<div id='beforeconnect'>
+Connection details<br>
 
-async def announce(wsobj, msg):
-    global connections, channels
-    channel = channels[wsobj]
+endpoint <input id='url' value='wss://192.168.1.153:8888'> (URL with port number)<br>
+channel <input id='cn' value='0012'> (four ASCII characters)
 
-    for i in connections:
-        if channels[i] == channel: #if relevant channel matches that of the element
-            await i.send(f'{msg}:{hex(id(wsobj))}')
-    
-async def echo(websocket):
-    global connections
-    global channels
-    async for message in websocket:
-        #print(websocket)
-        try:
-            cmd = message[0:2]
-            channel = message[2:6]
-            params = message[6:]
-        except:
-            cmd = 'NO'
-            params = '<NULL>'
+<br><br><button onclick='gosocket()'>go go go !!!</button>
+<p id='preport'>Awaiting...</p>
 
-        if cmd == 'NO':
-            pass # do nothing command
-        if cmd == 'CN':
-            await websocket.send(f'OK:added:{hex(id(websocket))}')
-            connections.append(websocket)
-            channels[websocket] = channel
-            print(f'Added {websocket} to array with channel {channels[websocket]}.')
-            #await announce(websocket, 'HELLO')
-            #the handler should not transfer control away at any point or connection will close prematurely
-        if cmd == 'DN':
-            await connections[connections.index(websocket)].close()
-            connections.remove(websocket)
-            print(f'Dropped {websocket} at user request.')
-            #await announce(websocket, 'BYE')
-        else: #relay non commands
-            for i in connections:
-                if channels[i] == channel:
-                    try: await i.send(message) # if the connobj channel is the current channel
-                    except:
-                        #await i.close()
-                        connections.remove(i)
-                        print(f'Dropped {websocket} due to unreachable host.')
-                        #await announce(i, 'DIED')
-                        pass
+</div>
 
-                   
-                    #if unreachable, we try to close it then delete the obj. if that doesn't work then just delete the object
+<div id='afterconnect' hidden>
+You are now in a call<br>
+Mute <input id='mute' type='checkbox'><br>
+Deaf <input id='deaf' type='checkbox'><br>
+<button onclick='window.userinitiated = true; window.socket.close();'>Close ws:// connection </button><br>
+</div>
 
-async def main():
-    print('Starting ws server on port TCP:8080')
+<script id='networkoperations'>
+// Create WebSocket connection.
+function gosocket() {
+if (document.getElementById('cn').value.length != 4) {
+document.getElementById('preport').innerHTML = 'Could not establish ws://connection because the channel is not four characters.'
+return null
+}
 
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    localhost_pem = pathlib.Path(__file__).with_name("certificate.pem")
-    ssl_context.load_cert_chain(localhost_pem)
+window.userinitiated = false;
+document.getElementById('preport').innerHTML = 'Connecting...'
+window.socket = new WebSocket(document.getElementById('url').value);
 
-    
-    async with websockets.serve(echo, "", 8080):
-        await asyncio.Future()  # run forever
 
-asyncio.run(main())
+// Connection opened
+window.socket.addEventListener('open', function (event) {
+	document.getElementById('beforeconnect').style.display = 'none'
+	document.getElementById('afterconnect').style.display = 'block'
+    socket.send('CN'+document.getElementById('cn').value);
+	transmitpacket();
+});
+
+// Listen for messages
+window.socket.addEventListener('message', function (event) {
+    console.log('Message from server:', event.data);
+	if (event.data.slice(0,2) == 'RL') {
+	playSound(event.data.slice(6));
+	}
+});
+
+// on socket shutdown
+window.socket.addEventListener('close', function (event) {
+    console.log('Socket closed down.');
+	document.getElementById('beforeconnect').style.display = 'block'
+	document.getElementById('afterconnect').style.display = 'none'
+	if (window.userinitiated == false) {
+	document.getElementById('beforeconnect').innerHTML = 'ws:// connection failed<br>You are not in a call. JS provided error code: '+event.code
+	} else {
+		document.getElementById('beforeconnect').innerHTML = 'ws:// connection stopped by user<br>You are not in a call. JS provided error code: '+event.code
+	}
+	//alert("The connection to the ws:// server failed.")
+});
+
+window.socket.addEventListener('error', function (event) {
+  console.log('WebSocket error: ', event);
+  //document.getElementById('error').innerHTML = event;
+});
+}
+
+
+function playSound(url) {
+if (document.getElementById('deaf').checked == false) {
+    var a = new Audio('data:audio/webm; codecs=opus;base64,'+url);
+    a.play();
+	} else {
+	console.log('this user is deafened')
+	}
+}
+
+
+function transmitpacket() {
+//start the stream
+navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(stream => {
+    const mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+	var reader = new FileReader();
+    const audioChunks = [];
+    mediaRecorder.addEventListener('dataavailable', event => {
+      audioChunks.push(event.data);
+    });
+	
+//choose an event to stop the stream	
+	//document.getElementById('txmsg').addEventListener('click', function() { mediaRecorder.stop() });
+	setTimeout(function(){mediaRecorder.stop()}, 400);
+
+//what happens on stream stop
+    mediaRecorder.addEventListener('stop', () => {
+      console.log('finished, encoding...');
+	  var aublob = new Blob(audioChunks, { 'type' : 'audio/webm; codecs=opus' })
+	  var audurl = window.URL.createObjectURL(aublob);
+	  console.log('blob URL: ' + audurl);
+	  reader.readAsDataURL(aublob);
+	  
+	  reader.onload =  function(e){
+        	console.log(e.target.result.replace('data:audio/webm; codecs=opus;base64,','').length);
+			var burl =  e.target.result.replaceAll('+','+');
+			burl = burl.replace('data:audio/webm; codecs=opus;base64,','')
+			console.log(burl.slice(0,50) + '...' + burl.slice(-50))
+			//here we have the audio data and we can do as we please with this
+			
+			//in this case we transmit it over the socket
+			if (document.getElementById('mute').checked == false) {
+			console.log('transmitting...')
+			window.socket.send('RL'+document.getElementById('cn').value+burl);
+			transmitpacket();
+			} else {
+			console.log('this user is muted')
+			transmitpacket();
+			}
+
+}
+
+
+}); //mediarecorder stop set 
+}) //end navi.media...
+} // close function
+
+</script>
