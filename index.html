@@ -1,0 +1,114 @@
+<div id='beforeconnect'>
+Connection details<br>
+
+wss://<input id='url' value='192.168.1.153:65432'> (with port number)<br>
+channel<input id='cn' value='0012'> (four ASCII characters)
+
+<br><br><button onclick='gosocket()'>go go go !!!</button>
+<p id='preport'>Awaiting...</p>
+
+</div>
+
+<div id='afterconnect' hidden>
+You are now in a call<br>
+Mute <input id='mute' type='checkbox'><br>
+Deaf <input id='deaf' type='checkbox'><br>
+<button onclick='window.userinitiated = true; window.socket.close();'>Close wss:// connection </button><br>
+</div>
+
+<script id='networkoperations'>
+// Create WebSocket connection.
+function gosocket() {
+window.userinitiated = false;
+document.getElementById('preport').innerHTML = 'Connecting...'
+window.socket = new WebSocket('wss://'+document.getElementById('url').value);
+
+// Connection opened
+window.socket.addEventListener('open', function (event) {
+	document.getElementById('beforeconnect').style.display = 'none'
+	document.getElementById('afterconnect').style.display = 'block'
+    socket.send('CN'+document.getElementById('cn').value);
+	transmitpacket();
+});
+
+// Listen for messages
+window.socket.addEventListener('message', function (event) {
+    console.log('Message from server:', event.data);
+	if (event.data.slice(0,2) == 'RL') {
+	playSound(event.data.slice(6));
+	}
+});
+
+// on socket shutdown
+window.socket.addEventListener('close', function (event) {
+    console.log('Socket closed down.');
+	document.getElementById('beforeconnect').style.display = 'block'
+	document.getElementById('afterconnect').style.display = 'none'
+	if (window.userinitiated == false) {
+	document.getElementById('beforeconnect').innerHTML = 'wss:// connection failed<br>You are not in a call.'
+	} else {
+		document.getElementById('beforeconnect').innerHTML = 'wss:// connection stopped by user<br>You are not in a call.'
+	}
+	//alert("The connection to the ws:// server failed.")
+});
+}
+
+function playSound(url) {
+if (document.getElementById('deaf').checked == false) {
+    var a = new Audio('data:audio/webm; codecs=opus;base64,'+url);
+    a.play();
+	} else {
+	console.log('this user is deafened')
+	}
+}
+
+
+function transmitpacket() {
+//start the stream
+navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(stream => {
+    const mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+	var reader = new FileReader();
+    const audioChunks = [];
+    mediaRecorder.addEventListener('dataavailable', event => {
+      audioChunks.push(event.data);
+    });
+	
+//choose an event to stop the stream	
+	//document.getElementById('txmsg').addEventListener('click', function() { mediaRecorder.stop() });
+	setTimeout(function(){mediaRecorder.stop()}, 400);
+
+//what happens on stream stop
+    mediaRecorder.addEventListener('stop', () => {
+      console.log('finished, encoding...');
+	  var aublob = new Blob(audioChunks, { 'type' : 'audio/webm; codecs=opus' })
+	  var audurl = window.URL.createObjectURL(aublob);
+	  console.log('blob URL: ' + audurl);
+	  reader.readAsDataURL(aublob);
+	  
+	  reader.onload =  function(e){
+        	console.log(e.target.result.replace('data:audio/webm; codecs=opus;base64,','').length);
+			var burl =  e.target.result.replaceAll('+','+');
+			burl = burl.replace('data:audio/webm; codecs=opus;base64,','')
+			console.log(burl.slice(0,50) + '...' + burl.slice(-50))
+			//here we have the audio data and we can do as we please with this
+			
+			//in this case we transmit it over the socket
+			if (document.getElementById('mute').checked == false) {
+			console.log('transmitting...')
+			window.socket.send('RL'+document.getElementById('cn').value+burl);
+			transmitpacket();
+			} else {
+			console.log('this user is muted')
+			transmitpacket();
+			}
+
+}
+
+
+}); //mediarecorder stop set 
+}) //end navi.media...
+} // close function
+
+</script>
