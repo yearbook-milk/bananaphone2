@@ -1,102 +1,181 @@
+<head>
+	<title>BANANAPHONE!</title>
+</head>
 <style>
-body{
-font-family: "Segoe UI", sans-serif;
-background-color: #222;
-}
+	body {
+		font-family: "Segoe UI", sans-serif;
+		background-color: #282828;
+	}
 
-button,select,input {
-font-family: "SimHei", sans-serif;
-background-color: #555;
-color: white;
-}
+	.panel {
+		background-color: #3c3836;
+		padding: 1em;
+	}
 
-button {
-border: 1px solid none;
-}
+	.panel-internal {
+		border-top: 0.1em solid #bdae93;
+		border-bottom: 0.1em solid #bdae93;
+		padding-top: 0.5em;
+		padding-bottom: 0.5em;
+	}
 
-button:hover,input:hover,select:hover {
-border: 2px solid yellow;
-}
+	button, select, input {
+		font-family: "SimHei", sans-serif;
+		background-color: #504945;
+		color: #ebdbb2;
+		border: 0.1em solid #504945;
+		transition: border-color 0.5s;
+	}
 
-p,b {
-color: white;
-}
+	button:hover, input:hover, select:hover {
+		border-color: #fabd2f;
+	}
 
-.display {
-color: white;
-display: inline;
-}
+	p, b, h1 {
+		color: #fbf1c7;
+		margin-top: 0.05em;
+		margin-bottom: 0.05em;
+	}
 
-b {
-font-size: 24px;
-}
+	.display {
+		color: #fbf1c7;
+		display: inline;
+	}
 
+	b {
+		font-size: 24px;
+	}
 
+	.hint {
+		font-size: 0.7em;
+		color: #bdae93;
+		margin: 0.1em;
+	}
 
+	.deco {
+		border-left: 0.5em solid #fabd2f;
+		height: 100%;
+	}
 
+	@media (max-width: 800px) {
+		#connection {
+			display: block !important;
+		}
 
+		#channel-select select {
+			height: 1.5em !important;
+		}
 
+		#channel-select {
+			border: none !important;
+		}
+
+		#endpoint-input {
+			margin-right: 0 !important;
+			margin-bottom: 1em;
+		}
+
+		#channel-select-info {
+			border-bottom: none !important;
+		}
+	}
+
+	#channel-select {
+		border-top: 0.1em solid #bdae93;
+		border-bottom: 0.1em solid #bdae93;
+	}
+
+	#channel-select select {
+		height: 100%;
+		flex: 20%;
+	}
+
+	#notification {
+		background-color: #504945;
+		color: #d5c4a1;
+		font-size: 1em;
+		padding: 1em;
+	}
 </style>
 
-
-<div id='beforeconnect'>
-<div id='connection' style='border: 1px solid none'>
-<b style='font-variant: small-caps'>Connection details</b><br>
-
-<p class='display'>endpoint</p> <input id='url' value='wss://cbe.fr.to:8888'> <p class='display'>(complete WebSockets url)</p><br>
-<p class='display'>channel&nbsp;&nbsp;&nbsp;</p>
-<select id="val1"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
-<select id="val2"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
-<select id="val3"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
-<select id="val4"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
-</select>
-
-
-<br><br> <button onclick='gosocket()'>Attempt to connect</button>
-<p id='preport' style='display:inline;'> </p>
-	<p class='display'>deployment on 1 Jan 22</p>
-</div>
+<div class="panel" style="margin-bottom: 0.5em; display: flex;">
+	<div style="flex: 2%;">
+		<div class="deco"></div>
+	</div>
+	<div style="flex: 90%;">
+		<h1>BANANAPHONE v2</h1>
+		<p class="hint">Since January 1st of 2022, in the Common Era.</p>
+		<div class="panel-internal">
+			<p><i>Created by Charles Hu</i></p>
+			<p><i>Styles by hereticSibyl</i></p>
+		</div>
+	</div>
 </div>
 
-<br>
+<div id='beforeconnect' class="panel">
+	<b style='font-variant: small-caps'>CONNECTION</b><br>
+	<div id='connection' class="panel-internal" style="display: flex;">
+		<div id="endpoint-input" class="panel-internal" style="flex: 40%; margin-right: 5%;">
+			<p>Server Endpoint</p>
+			<p class="hint" style="margin-bottom: 2em;">( i ) URL to the BANANAPHONE server, starting with "wss://" followed by an address.</p>
+			<input id='url' value='wss://cbe.fr.to:8888'>
+		</div>
 
-
-<div id='afterconnect' hidden>
-<p id='notification' style='background-color: #333'></p>
-
-<p class='display'>You are now in a call. Channel: <p id='channel' class='display' style='font-style: oblique;'>undefined</p><br></p>
-
-<p class="display">Mute <input id='mute' type='checkbox'>&nbsp;</p>
-<p class="display">Deaf <input id='deaf' type='checkbox'><br></p>
-
-<br>
-<button style='background-color: red;' onclick='window.userinitiated = true; window.socket.send("DN"+getchannel()+"null");'>Close WebSocket connection</button>
-<p class='display'>(please remember to disconnect the WebSocket connection before closing the page)</p><br><br>
-<button href='javascript:void(0)' onclick='document.getElementById("audio").style.display = "block"'>Show audio settings</button>
-<button href='javascript:void(0)' onclick='document.getElementById("audio").style.display = "none"'>Hide audio settings</button>
-
-
-<div id='audio'  hidden>
-<b style='font-variant: small-caps'>Audio input</b><br>
-<p id='inputs' style='display:inline;'>
-Javascript is loading your available mic inputs...
-</p><br><br>
-<p class="display">Pick your input:</p> <input style='width: 35px;' id='aids' value='0'><br><br><br>
-
-<b style='font-variant: small-caps'>Packet interval</b><br>
-<input id='interval' style='width: 65px;' value='420'> <p class="display">(time in ms)</p>
-<br><br>
-
-<b style='font-variant: small-caps'>Output volume</b><br>
-<input id='vol' style='width: 65px;' value='1.0'> <p class="display">(must be a floating point number from 0.0 to 1.0)</p>
-<br><br>
-
+		<div id="channel-select-info" class="panel-internal" style="flex: 20%;">
+			<p>Audio Channel</p>
+			<p class="hint" style="margin-bottom: 2em;">( i ) 4-digit base-16 identifier for the target audio channel, something like 69AF or 0420.</p>
+		</div>
+		<div id="channel-select">
+			<select id="val1"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
+			<select id="val2"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
+			<select id="val3"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
+			<select id="val4"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
+		</div>
+	</div>
+	<div style="display: flex; justify-content: center;">
+		<button onclick='gosocket()' style="margin-top: 1em;">Connect!</button>
+	</div>
+	<p id="preport" class="hint" style="text-align: center; margin-top: 1em;"></p>
 </div>
 
+<div id='afterconnect' hidden class="panel">
+	<p id='notification' style="margin-bottom: 1em;"></p>
+
+	<div class="panel-internal">
+		<p class='display'>You are now in a call. Channel: <p id='channel' class='display' style='font-style: oblique;'>undefined</p><br></p>
+
+		<p class="display">Mute <input id='mute' type='checkbox'>&nbsp;</p>
+		<p class="display">Deaf <input id='deaf' type='checkbox'><br></p>
+	</div>
+
+	<div class="panel-internal" style="margin-top: 1em; margin-bottom: 1em; display: flex; justify-content: center;">
+		<button style="margin-right: 0.25em;" href='javascript:void(0)' onclick='document.getElementById("audio").style.display = "block"'>Show audio settings</button>
+		<button href='javascript:void(0)' onclick='document.getElementById("audio").style.display = "none"'>Hide audio settings</button>
+	</div>
+
+	<div id='audio' hidden class="panel-internal">
+		<b style='font-variant: small-caps'>Audio input</b><br>
+		<p id='inputs' style='display:inline;'>
+		Javascript is loading your available mic inputs...
+		</p><br><br>
+		<p class="display">Pick your input:</p> <input style='width: 35px;' id='aids' value='0'><br><br><br>
+
+		<b style='font-variant: small-caps'>Packet interval</b><br>
+		<p class="hint">( i ) Rate at which audio date is exchanged, in milliseconds.</p>
+		<input id='interval' style='width: 65px;' value='420'>
+		<br><br>
+
+		<b style='font-variant: small-caps'>Output volume</b><br>
+		<p class="hint">( i ) Volume level notated between 1 to 0, with 1 being the highest, and 0 being the lowest.</p>
+		<input id='vol' style='width: 65px;' value='1.0'> <p class="display"></p>
+		<br><br>
+	</div>
+
+	<div class="panel-internal">
+		<button style='color: #fb4934; margin-bottom: 0.5em;' onclick='window.userinitiated = true; window.socket.send("DN"+getchannel()+"null");'>Close Connection</button>
+		<p class='hint'>(please press before closing the page to fully disconnect)</p>
+	</div>
 </div>
-
-
-
 
 <script id='networkoperations'>
 // fill in the slot
@@ -115,14 +194,15 @@ document.getElementById('val4').value = predef.slice(3,4)
 }
 // get all inputs
 navigator.mediaDevices.enumerateDevices().then((devices) => {
-to = ""
-window.aiid = devices;
- for (var i=0; i<devices.length; i++) {
- if (devices[i].kind == 'audioinput') {
- to = to + i + ' ' + devices[i].label + '<br>'
- }}
- 
-document.getElementById('inputs').innerHTML = to;
+	to = ""
+	window.aiid = devices;
+	for (var i=0; i<devices.length; i++) {
+		if (devices[i].kind == 'audioinput') {
+			to = to + i + ' ' + devices[i].label + '<br>'
+		}
+	}
+
+	document.getElementById('inputs').innerHTML = to;
 })
 
 
@@ -144,7 +224,7 @@ window.socket.addEventListener('open', function (event) {
 	document.getElementById('channel').innerHTML = getchannel()
     socket.send('CN'+getchannel());
 	transmitpacket();
-	
+
 });
 
 // Listen for messages
@@ -164,8 +244,8 @@ a.play()
 document.getElementById('notification').innerHTML = 'Someone has disconnected: '+event.data.slice(2)
 
 	}
-	
-	
+
+
 });
 
 // on socket shutdown
@@ -178,7 +258,7 @@ a.play()
 	if (window.userinitiated == false) {
 	document.getElementById('beforeconnect').innerHTML = '<p class="display">WebSocket connection failed<br>You are not in a call. JS provided error code: '+event.code
 	} else {
-		document.getElementById('beforeconnect').innerHTML = '<p class="display">WebSocket connection stopped by user<br>You are not in a call. JS provided error code: '+event.code
+		document.getElementById('beforeconnect').innerHTML = '<p class="display">User has disconnected. Reload to start another session.<br>You are not in a call. JS provided error code: '+event.code
 	}
 	//alert("The connection to the ws:// server failed.")
 });
@@ -215,8 +295,8 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
     mediaRecorder.addEventListener('dataavailable', event => {
       audioChunks.push(event.data);
     });
-	
-//choose an event to stop the stream	
+
+//choose an event to stop the stream
 	//document.getElementById('txmsg').addEventListener('click', function() { mediaRecorder.stop() });
 	setTimeout(function(){mediaRecorder.stop()}, document.getElementById('interval').value);
 
@@ -227,14 +307,14 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
 	  var audurl = window.URL.createObjectURL(aublob);
 	  console.log('blob URL: ' + audurl);
 	  reader.readAsDataURL(aublob);
-	  
+
 	  reader.onload =  function(e){
         	console.log(e.target.result.replace('data:audio/webm; codecs=opus;base64,','').length);
 			var burl =  e.target.result.replaceAll('+','+');
 			burl = burl.replace('data:audio/webm; codecs=opus;base64,','')
 			console.log(burl.slice(0,50) + '...' + burl.slice(-50))
 			//here we have the audio data and we can do as we please with this
-			
+
 			//in this case we transmit it over the socket
 			if (document.getElementById('mute').checked == false) {
 			console.log('transmitting...')
@@ -248,7 +328,7 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
 }
 
 
-}); //mediarecorder stop set 
+}); //mediarecorder stop set
 }) //end navi.media...
 } // close function
 
