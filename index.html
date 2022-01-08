@@ -178,6 +178,8 @@
 </div>
 
 <script id='networkoperations'>
+
+
 // fill in the slot
 const urlParams = new URLSearchParams(window.location.search);
 var predef = urlParams.get('channel')
@@ -194,15 +196,14 @@ document.getElementById('val4').value = predef.slice(3,4)
 }
 // get all inputs
 navigator.mediaDevices.enumerateDevices().then((devices) => {
-	to = ""
-	window.aiid = devices;
-	for (var i=0; i<devices.length; i++) {
-		if (devices[i].kind == 'audioinput') {
-			to = to + i + ' ' + devices[i].label + '<br>'
-		}
-	}
-
-	document.getElementById('inputs').innerHTML = to;
+to = ""
+window.aiid = devices;
+ for (var i=0; i<devices.length; i++) {
+ if (devices[i].kind == 'audioinput') {
+ to = to + i + ' ' + devices[i].label + '<br>'
+ }}
+ 
+document.getElementById('inputs').innerHTML = to;
 })
 
 
@@ -224,7 +225,7 @@ window.socket.addEventListener('open', function (event) {
 	document.getElementById('channel').innerHTML = getchannel()
     socket.send('CN'+getchannel());
 	transmitpacket();
-
+	
 });
 
 // Listen for messages
@@ -233,6 +234,11 @@ window.socket.addEventListener('message', function (event) {
 	if (event.data.slice(0,2) == 'RL') {
 	playSound(event.data.slice(6));
 	}
+if (event.data.slice(0,2) == 'UR') {
+	playExtSound(event.data.slice(6));
+	}
+	
+	
 	if (event.data.slice(0,2) == 'NU') {
 	var a = new Audio('4beep.mp3');
 a.play()
@@ -244,13 +250,14 @@ a.play()
 document.getElementById('notification').innerHTML = 'Someone has disconnected: '+event.data.slice(2)
 
 	}
-
-
+	
+	
 });
 
 // on socket shutdown
 window.socket.addEventListener('close', function (event) {
 var a = new Audio('suddendc.mp3');
+
 a.play()
     console.log('Socket closed down.');
 	document.getElementById('beforeconnect').style.display = 'block'
@@ -258,7 +265,7 @@ a.play()
 	if (window.userinitiated == false) {
 	document.getElementById('beforeconnect').innerHTML = '<p class="display">WebSocket connection failed<br>You are not in a call. JS provided error code: '+event.code
 	} else {
-		document.getElementById('beforeconnect').innerHTML = '<p class="display">User has disconnected. Reload to start another session.<br>You are not in a call. JS provided error code: '+event.code
+		document.getElementById('beforeconnect').innerHTML = '<p class="display">WebSocket connection stopped by user<br>You are not in a call. JS provided error code: '+event.code
 	}
 	//alert("The connection to the ws:// server failed.")
 });
@@ -272,13 +279,37 @@ window.socket.addEventListener('error', function (event) {
 }
 
 
+
+
 function playSound(url) {
 if (document.getElementById('deaf').checked == false) {
     var a = new Audio('data:audio/webm; codecs=opus;base64,'+url);
+	//a.controls = true;
+	//document.body.appendChild(a);
+	a.addEventListener("ended", function(){
+     delete a;
+	 a = null;
+});
 	a.volume = document.getElementById('vol').value;
     a.play();
 	} else {
 	console.log('this user is deafened')
+	}
+}
+function playExtSound(url) {
+if (document.getElementById('deaf').checked == false) {
+    var a = new Audio(url);
+	console.log('[extsound] playing '+url)
+	//a.controls = true;
+	//document.body.appendChild(a);
+	a.addEventListener("ended", function(){
+     delete a;
+	 a = null;
+});
+	a.volume = document.getElementById('vol').value;
+    a.play();
+	} else {
+	console.log('[extsound] this user is deafened')
 	}
 }
 
@@ -295,8 +326,8 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
     mediaRecorder.addEventListener('dataavailable', event => {
       audioChunks.push(event.data);
     });
-
-//choose an event to stop the stream
+	
+//choose an event to stop the stream	
 	//document.getElementById('txmsg').addEventListener('click', function() { mediaRecorder.stop() });
 	setTimeout(function(){mediaRecorder.stop()}, document.getElementById('interval').value);
 
@@ -307,14 +338,14 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
 	  var audurl = window.URL.createObjectURL(aublob);
 	  console.log('blob URL: ' + audurl);
 	  reader.readAsDataURL(aublob);
-
+	  
 	  reader.onload =  function(e){
         	console.log(e.target.result.replace('data:audio/webm; codecs=opus;base64,','').length);
 			var burl =  e.target.result.replaceAll('+','+');
 			burl = burl.replace('data:audio/webm; codecs=opus;base64,','')
 			console.log(burl.slice(0,50) + '...' + burl.slice(-50))
 			//here we have the audio data and we can do as we please with this
-
+			
 			//in this case we transmit it over the socket
 			if (document.getElementById('mute').checked == false) {
 			console.log('transmitting...')
@@ -328,8 +359,9 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
 }
 
 
-}); //mediarecorder stop set
+}); //mediarecorder stop set 
 }) //end navi.media...
 } // close function
 
 </script>
+
