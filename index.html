@@ -151,6 +151,7 @@
 	<div class="panel-internal" style="margin-top: 1em; margin-bottom: 1em; display: flex; justify-content: center;">
 		<button style="margin-right: 0.25em;" href='javascript:void(0)' onclick='document.getElementById("audio").style.display = "block"'>Show audio settings</button>
 		<button href='javascript:void(0)' onclick='document.getElementById("audio").style.display = "none"'>Hide audio settings</button>
+		<button onclick='var sounds = document.getElementsByTagName("audio"); for(i=0; i<sounds.length; i++) sounds[i].pause();'>Stop all sound locally</button>
 	</div>
 
 	<div id='audio' hidden class="panel-internal">
@@ -176,6 +177,7 @@
 		<p class='hint'>(please press before closing the page to fully disconnect)</p>
 	</div>
 </div>
+
 
 <script id='networkoperations'>
 
@@ -285,10 +287,10 @@ function playSound(url) {
 if (document.getElementById('deaf').checked == false) {
     var a = new Audio('data:audio/webm; codecs=opus;base64,'+url);
 	//a.controls = true;
-	//document.body.appendChild(a);
+	document.body.appendChild(a);
 	a.addEventListener("ended", function(){
-     delete a;
-	 a = null;
+	 document.body.removeChild(a);
+	 	 a = null;
 });
 	a.volume = document.getElementById('vol').value;
     a.play();
@@ -301,9 +303,9 @@ if (document.getElementById('deaf').checked == false) {
     var a = new Audio(url);
 	console.log('[extsound] playing '+url)
 	//a.controls = true;
-	//document.body.appendChild(a);
+	document.body.appendChild(a);
 	a.addEventListener("ended", function(){
-     delete a;
+     document.body.removeChild(a);
 	 a = null;
 });
 	a.volume = document.getElementById('vol').value;
@@ -364,4 +366,3 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
 } // close function
 
 </script>
-
