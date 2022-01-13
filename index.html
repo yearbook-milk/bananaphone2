@@ -132,6 +132,12 @@
 			<select id="val4"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option></select>
 		</div>
 	</div>
+	
+	<br>
+<p class='display'>alias</p> <input id='alias' value='Anon'> 
+<br><br>
+
+	
 	<div style="display: flex; justify-content: center;">
 		<button onclick='gosocket()' style="margin-top: 1em;">Connect!</button>
 	</div>
@@ -180,7 +186,7 @@
 
 
 <script id='networkoperations'>
-
+	var users = []
 
 // fill in the slot
 const urlParams = new URLSearchParams(window.location.search);
@@ -224,20 +230,43 @@ window.socket = new WebSocket(document.getElementById('url').value);
 window.socket.addEventListener('open', function (event) {
 	document.getElementById('beforeconnect').style.display = 'none'
 	document.getElementById('afterconnect').style.display = 'block'
-	document.getElementById('channel').innerHTML = getchannel()
-    socket.send('CN'+getchannel());
-	transmitpacket();
+		alias = document.getElementById('alias').value
+		
+	document.getElementById('channel').innerHTML = 'You are in channel '+getchannel() + ' as '+alias+'.'
 	
+
+    socket.send('CN'+getchannel()+alias);
+	transmitpacket();
 });
 
 // Listen for messages
 window.socket.addEventListener('message', function (event) {
-    console.log('Message from server:', event.data);
+    console.log('Message from server:', event.data.slice(0,100));
+	
+	opcode = event.data.slice(0,2)
+	channel = event.data.slice(2,6)
+	namelen = event.data.slice(6,8)
+	name = event.data.slice(8, 8+parseInt(namelen))
+	content = event.data.slice(8+parseInt(namelen))
+	//console.log('Packet info:'+opcode+' '+channel+' '+namelen+' '+name)
+	
 	if (event.data.slice(0,2) == 'RL') {
-	playSound(event.data.slice(6));
+	/*	if (users.includes(name) == false) {
+	users.push(name)
 	}
-if (event.data.slice(0,2) == 'UR') {
-	playExtSound(event.data.slice(6));
+	document.getElementById('dataout').innerHTML = 'opcode: RL, person: '+name+', connection history: '+users
+	*/
+	playSound(content);
+
+	}
+    if (event.data.slice(0,2) == 'UR') {
+	/*
+		if (users.includes(name) == false) {
+	users.push(name)
+	}
+document.getElementById('dataout').innerHTML = 'opcode: UR, person: '+name+', connection history: '+users
+*/
+	playExtSound(content);
 	}
 	
 	
@@ -281,7 +310,12 @@ window.socket.addEventListener('error', function (event) {
 }
 
 
-
+function playURL(url) {
+alias = document.getElementById('alias').value
+	tolen = '000000'+alias.length.toString()
+	tolen = tolen.slice(-2)		
+	window.socket.send('UR'+getchannel()+tolen+alias+url);
+}
 
 function playSound(url) {
 if (document.getElementById('deaf').checked == false) {
@@ -350,8 +384,13 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
 			
 			//in this case we transmit it over the socket
 			if (document.getElementById('mute').checked == false) {
+			alias = document.getElementById('alias').value
+			
+						tolen = '000000'+alias.length.toString()
+			tolen = tolen.slice(-2)
+			
 			console.log('transmitting...')
-			window.socket.send('RL'+getchannel()+burl);
+			window.socket.send('RL'+getchannel()+tolen+alias+burl);
 			transmitpacket();
 			} else {
 			console.log('this user is muted')
@@ -364,5 +403,59 @@ navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].devic
 }); //mediarecorder stop set 
 }) //end navi.media...
 } // close function
+
+
+function recordthentx() {
+//start the stream
+index = document.getElementById('aids').value;
+navigator.mediaDevices.getUserMedia({ audio: {deviceId: window.aiid[index].deviceId} })
+  .then(stream => {
+    const mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+	var reader = new FileReader();
+    const audioChunks = [];
+    mediaRecorder.addEventListener('dataavailable', event => {
+      audioChunks.push(event.data);
+    });
+	
+//choose an event to stop the stream	
+	//document.getElementById('txmsg').addEventListener('click', function() { mediaRecorder.stop() });
+	document.getElementById('stoprecording').onclick = function(){mediaRecorder.stop()};
+
+//what happens on stream stop
+    mediaRecorder.addEventListener('stop', () => {
+      console.log('[rec] finished, encoding...');
+	  var aublob = new Blob(audioChunks, { 'type' : 'audio/webm; codecs=opus' })
+	  var audurl = window.URL.createObjectURL(aublob);
+	  console.log('[rec] blob URL: ' + audurl);
+	  reader.readAsDataURL(aublob);
+	  
+	  reader.onload =  function(e){
+        	console.log(e.target.result.replace('data:audio/webm; codecs=opus;base64,','').length);
+			var burl =  e.target.result.replaceAll('+','+');
+			burl = burl.replace('data:audio/webm; codecs=opus;base64,','')
+			console.log(burl.slice(0,50) + '...' + burl.slice(-50))
+			//here we have the audio data and we can do as we please with this
+			
+			//in this case we transmit it over the socket
+			if (true) {
+			console.log('[rec] transmitting...')
+			
+			alias = document.getElementById('alias').value
+			tolen = '000000'+alias.length.toString()
+			tolen = tolen.slice(-2)
+			
+			window.socket.send('RL'+getchannel()+tolen+alias+burl);
+			transmitpacket();
+			} else {
+			console.log('[rec] this user is muted')
+			}
+
+}
+
+
+}); //mediarecorder stop set 
+})
+}
 
 </script>
