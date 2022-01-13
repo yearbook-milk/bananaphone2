@@ -146,6 +146,7 @@
 
 <div id='afterconnect' hidden class="panel">
 	<p id='notification' style="margin-bottom: 1em;"></p>
+	<p id='dataout' style="margin-bottom: 1em;"></p>
 
 	<div class="panel-internal">
 		<p class='display'>You are now in a call. Channel: <p id='channel' class='display' style='font-style: oblique;'>undefined</p><br></p>
@@ -221,6 +222,11 @@ return document.getElementById('val1').value+document.getElementById('val2').val
 }
 
 function gosocket() {
+	if (document.getElementById('alias').value.length >= 99) {
+document.getElementById('preport').innerHTML = 'Error: alias must contain less than 99 ASCII characters.'
+return none
+
+}
 window.userinitiated = false;
 document.getElementById('preport').innerHTML = 'Connecting...'
 window.socket = new WebSocket(document.getElementById('url').value);
@@ -264,8 +270,9 @@ window.socket.addEventListener('message', function (event) {
 		if (users.includes(name) == false) {
 	users.push(name)
 	}
+	*/
 document.getElementById('dataout').innerHTML = 'opcode: UR, person: '+name+', connection history: '+users
-*/
+
 	playExtSound(content);
 	}
 	
